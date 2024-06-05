@@ -4,4 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-libsignal-protocol = "0.3"
+anyhow = "1"
+clap = { version = "4", features = ["cargo", "derive", "wrap_help"] }
+tokio = { version = "1", features = ["full"] }
+tokio-util = "0.7"
+base64 = "0.22.1"
+url = "2.2.2"
