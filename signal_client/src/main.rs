@@ -132,10 +132,11 @@ async fn link_account(arguments: Vec<String>) -> Result<(), Box<dyn std::error::
 async fn show_messages(arguments: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
     let contact = &arguments[2];
     if let Some(uuid) = find_account_uuid(contact) {
+        println!("Znaleziono uuid");
         let store = SledStore::open("/tmp/presage-example/", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
         let mut manager = Manager::load_registered(store.clone()).await?;
 
-        let thread = Thread::Contact(Uuid::parse_str("your-contact-uuid-here")?);
+        let thread = Thread::Contact(uuid);
         let messages = manager.messages(&thread, RangeFull)?;
 
         for message in messages {
