@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 use std::fs::OpenOptions;
 use presage::libsignal_service::models::Contact;
 
-pub fn find_account_uuid(phone_number: &str) -> Option<Uuid> {
+pub fn find_account_uuid(name: &str) -> Option<Uuid> {
     let mut file = File::open("./registration/contacts.json").expect("Unable to open file");
     let mut data = String::new();
     file.read_to_string(&mut data).expect("Unable to read file");
@@ -15,7 +15,7 @@ pub fn find_account_uuid(phone_number: &str) -> Option<Uuid> {
     let json: Value = serde_json::from_str(&data).expect("Unable to parse JSON");
     if let Some(accounts) = json["accounts"].as_array() {
         for account in accounts {
-            if account["number"] == phone_number {
+            if account["name"] == name {
                 return Uuid::parse_str(account["uuid"].as_str().unwrap()).ok();
             }
         }
@@ -33,6 +33,22 @@ pub fn find_phone_number(uuid: &str) -> Option<String> {
         for account in accounts {
             if account["uuid"] == uuid {
                 return account["number"].as_str().map(|s| s.to_string());
+            }
+        }
+    }
+    None
+}
+
+pub fn find_name(uuid: &str) -> Option<String> {
+    let mut file = File::open("./registration/contacts.json").expect("Unable to open file");
+    let mut data = String::new();
+    file.read_to_string(&mut data).expect("Unable to read file");
+
+    let json: Value = serde_json::from_str(&data).expect("Unable to parse JSON");
+    if let Some(accounts) = json["accounts"].as_array() {
+        for account in accounts {
+            if account["uuid"] == uuid {
+                return account["name"].as_str().map(|s| s.to_string());
             }
         }
     }
