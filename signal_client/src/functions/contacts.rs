@@ -51,16 +51,25 @@ fn contact_exists(json: &Value, uuid: &str) -> bool {
 }
 
 fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Error>> {
-    let mut file = OpenOptions::new().read(true).write(true).create(true).open("./registration/contacts.json")?;
     let mut data = String::new();
-    file.read_to_string(&mut data)?;
-    println!("nie umie czytac xd");
-    let mut json: Value = serde_json::from_str(&data)?;
-    println!("Tiutaj jest problem");
+    let mut json: Value;
+
+    // Read existing content or initialize new JSON
+    if let Ok(mut file) = File::open("./registration/contacts.json") {
+        file.read_to_string(&mut data)?;
+        json = if data.trim().is_empty() {
+            json!({"accounts": [], "version": 2})
+        } else {
+            serde_json::from_str(&data)?
+        };
+    } else {
+        json = json!({"accounts": [], "version": 2});
+    }
+
     if !json["accounts"].is_array() {
         json["accounts"] = json!([]);
     }
-    println!("Contact exist");
+
     if !contact_exists(&json, &contact.uuid.to_string()) {
         if let Some(accounts) = json["accounts"].as_array_mut() {
             let new_account = json!({
@@ -72,7 +81,7 @@ fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Erro
     }
 
     let updated_data = serde_json::to_string_pretty(&json)?;
-    file.set_len(0)?;
+    let mut file = OpenOptions::new().write(true).truncate(true).create(true).open("./registration/contacts.json")?;
     file.write_all(updated_data.as_bytes())?;
     Ok(())
 }
@@ -83,8 +92,9 @@ pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>>
     for contact_result in contacts_iter {
         match contact_result {
             Ok(contact) => {
-                // add_contacts_to_json(contact).expect("Contact not saved");
-                println!("{:?}", contact)
+                if let Err(e) = add_contacts_to_json(contact) {
+                    eprintln!("Contact not saved: {:?}", e);
+                }
             },
             Err(err) => eprintln!("Error retrieving contact: {:?}", err),
         }
