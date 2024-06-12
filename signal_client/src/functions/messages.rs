@@ -1,7 +1,7 @@
 use presage::libsignal_service::content::Content;
 use presage::libsignal_service::content::ContentBody::DataMessage;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use crate::functions::contacts::find_phone_number;
+use crate::functions::contacts::{find_name, find_phone_number};
 
 pub fn extract_message_info(content: &Content) -> Option<(String, &str, u64)> {
     if let Content {
@@ -12,8 +12,8 @@ pub fn extract_message_info(content: &Content) -> Option<(String, &str, u64)> {
         let message_timestamp = sync_message.timestamp();
         let message_body = sync_message.body();
         let message_date = format_timestamp(message_timestamp);
-        if let Some(phone_number) = find_phone_number(sender_aci.as_str()){
-            println!("Sender: {:?} \nMessage: {:?} \nTime: {:?} \n", phone_number , message_body, message_date);
+        if let Some(name) = find_name(sender_aci.as_str()){
+            println!("Sender: {:?} \nMessage: {:?} \nTime: {:?} \n", name , message_body, message_date);
         } else{
             println!("Sender: {:?} \nMessage: {:?} \nTime: {:?} \n", sender_aci , message_body, message_date);
         }
