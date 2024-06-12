@@ -6,8 +6,9 @@ use std::env;
 use crate::functions::accounts::link_account;
 use crate::functions::contacts::sync_and_print_contacts;
 use crate::functions::received::{receive_and_store_messages, show_messages, get_contact_messages};
-use crate::functions::sending::send_message;
-use crate::functions::contacts::sync_and_get_contacts;
+use crate::functions::sending::{send_message, initialize_app_data};
+use crate::functions::contacts::{sync_and_get_contacts, find_name};
+use crate::functions::messages::format_timestamp;
 
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -26,27 +27,11 @@ use crate::functions::messages::extract_message_info;
 use futures::StreamExt;
 use presage::manager::ReceivingMode;
 use std::ops::RangeFull;
+use presage::Manager;
+use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
+use chrono::NaiveDateTime;
 
-// use crossterm::{
-//     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
-//     execute,
-//     terminal::{
-//         disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
-//     },
-// };
-// use std::{error::Error, io};
-// use tui::{
-//     backend::{Backend, CrosstermBackend},
-//     layout::{Constraint, Direction, Layout},
-//     style::{Color, Modifier, Style},
-//     text::{Line, Span, Text},
-//     widgets::{Block, Borders, List, ListItem, Paragraph},
-//     Frame, Terminal,
-// };
-// use tui_input::backend::crossterm::EventHandler;
-// use tui_input::Input;
-
-fn print_options(){
+fn print_options() {
     println!("Please use one of the following options:");
     println!("  send <recipient> <message>   - Send a message to a recipient");
     println!("  account <account_name>      - Link an account");
@@ -62,18 +47,20 @@ enum InputMode {
 
 pub struct App {
     contacts: Vec<String>,
-    messages: Vec<(String, String, u64)>,
+    messages: Vec<(String, String, u64, String)>,
     input: String,
     selected_contact: Option<usize>,
+    name: String,
 }
 
 impl App {
-    fn new(contacts: Vec<String>) -> App {
+    fn new(contacts: Vec<String>, name: String) -> App {
         App {
             contacts,
             messages: vec![],
             input: String::new(),
             selected_contact: None,
+            name,
         }
     }
 }
@@ -113,11 +100,12 @@ async fn start_tui() -> Result<(), Box<dyn std::error::Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let contacts = sync_and_get_contacts().await?;
-    let mut app = App::new(contacts);
-    app.selected_contact = Some(0);
-    if (app.contacts.len() > 0){
-        app.messages = get_contact_messages(&app.contacts[0]).await?;
+    let (contacts, name) = initialize_app_data().await?;
+
+    let mut app = App::new(contacts, name);
+
+    if !app.contacts.is_empty() {
+        app.messages = get_contact_messages_with_dates(&app.contacts[0]).await?;
     }
 
     // Run the app
@@ -163,30 +151,23 @@ async fn run_app<B: ratatui::backend::Backend>(
 
             f.render_widget(contacts_list, main_chunks[0]);
 
-            let messages: Vec<ListItem> = app.messages.iter().map(|(sender, message, _)| {
-                let style = if is_outgoing_message(sender) {
+            let messages: Vec<ListItem> = app.messages.iter().map(|(sender, message, _, date)| {
+                let style = if app.name.as_str() == sender {
                     Style::default().fg(Color::Green)
                 } else {
                     Style::default().fg(Color::Blue)
                 };
-                ListItem::new(message.clone()).style(style)
+                ListItem::new(format!("{} - {}", date, message)).style(style)
             }).collect();
 
             let messages_title = match app.selected_contact {
                 Some(index) => format!("Messages - {}", app.contacts[index]),
-                None => "Messages".to_string(),
+                None => format!("Messages - {}", app.contacts[0]),
             };
 
             let messages_list = List::new(messages)
                 .block(Block::default().borders(Borders::ALL).title(messages_title.as_str()));
             f.render_widget(messages_list, main_chunks[1]);
-
-            // let input = Paragraph::new(app.input.value())
-            //     .block(Block::default().borders(Borders::ALL).title("Input"));
-            // let input = List::new(messages)
-            //     .block(Block::default().borders(Borders::ALL).title("Input"));
-
-            // f.render_widget(input, chunks[1]);
         })?;
 
         if crossterm::event::poll(Duration::from_millis(200))? {
@@ -202,7 +183,7 @@ async fn run_app<B: ratatui::backend::Backend>(
                             app.selected_contact = Some(0);
                         }
                         if let Some(selected) = app.selected_contact {
-                            match get_contact_messages(&app.contacts[selected]).await {
+                            match get_contact_messages_with_dates(&app.contacts[selected]).await {
                                 Ok(messages) => app.messages = messages,
                                 Err(err) => eprintln!("Error fetching messages: {:?}", err),
                             }
@@ -215,30 +196,12 @@ async fn run_app<B: ratatui::backend::Backend>(
                             }
                         }
                         if let Some(selected) = app.selected_contact {
-                            match get_contact_messages(&app.contacts[selected]).await {
+                            match get_contact_messages_with_dates(&app.contacts[selected]).await {
                                 Ok(messages) => app.messages = messages,
                                 Err(err) => eprintln!("Error fetching messages: {:?}", err),
                             }
                         }
                     }
-                    // KeyCode::Enter => {
-                    //     if let Some(selected) = app.selected_contact {
-                    //         let contact = app.contacts[selected].clone();
-                    //         app.fetch_messages_for_contact(&contact)
-                    //             .await
-                    //             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-                    //     } else if !app.input.is_empty() {
-                    //         app.send_current_message()
-                    //             .await
-                    //             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-                    //     }
-                    // }
-                    // KeyCode::Char(c) => {
-                    //     app.input.push(c);
-                    // }
-                    // KeyCode::Backspace => {
-                    //     app.input.pop();
-                    // }
                     _ => {}
                 }
             }
@@ -246,6 +209,11 @@ async fn run_app<B: ratatui::backend::Backend>(
     }
 }
 
-fn is_outgoing_message(sender: &str) -> bool {
-    true
+async fn get_contact_messages_with_dates(contact: &str) -> Result<Vec<(String, String, u64, String)>, Box<dyn std::error::Error>> {
+    let messages = get_contact_messages(contact).await?;
+    let messages_with_dates = messages.into_iter().map(|(sender, message, timestamp)| {
+        let date_string = format_timestamp(timestamp as u64);
+        (sender, message, timestamp, date_string)
+    }).collect();
+    Ok(messages_with_dates)
 }
