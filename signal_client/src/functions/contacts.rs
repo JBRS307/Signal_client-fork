@@ -103,12 +103,23 @@ fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Erro
 }
 
 pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>> {
+    let contacts = sync_and_get_contacts().await?;
+    for contact in contacts {
+        println!("{}", contact);
+    }
+
+    Ok(())
+}
+
+pub async fn sync_and_get_contacts() -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
     let contacts_iter = store.contacts()?;
+    
+    let mut contact_names = Vec::new();
     for contact_result in contacts_iter {
         match contact_result {
             Ok(contact) => {
-                println!("{}", contact.name );
+                contact_names.push(contact.name.clone());
                 if let Err(e) = add_contacts_to_json(contact) {
                     eprintln!("Contact not saved: {:?}", e);
                 }
@@ -117,5 +128,5 @@ pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>>
         }
     }
 
-    Ok(())
+    Ok(contact_names)
 }
