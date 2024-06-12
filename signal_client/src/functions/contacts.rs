@@ -108,6 +108,7 @@ pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>>
     for contact_result in contacts_iter {
         match contact_result {
             Ok(contact) => {
+                println!("{}", contact.name );
                 if let Err(e) = add_contacts_to_json(contact) {
                     eprintln!("Contact not saved: {:?}", e);
                 }
