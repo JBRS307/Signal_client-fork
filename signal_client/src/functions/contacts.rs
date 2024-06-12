@@ -6,6 +6,7 @@ use std::io::{Read, Write};
 use serde_json::{json, Value};
 use std::fs::OpenOptions;
 use presage::libsignal_service::models::Contact;
+use crate::functions::received::show_last_message;
 
 pub fn find_account_uuid(name: &str) -> Option<Uuid> {
     let mut file = File::open("./registration/contacts.json").expect("Unable to open file");
@@ -104,11 +105,14 @@ fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Erro
 
 pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>> {
     let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+    // let mut manager = Manager::load_registered(store.clone()).await?;
     let contacts_iter = store.contacts()?;
     for contact_result in contacts_iter {
         match contact_result {
             Ok(contact) => {
                 println!("{}", contact.name );
+                show_last_message(&contact.name);
+                println!("-------------------");
                 if let Err(e) = add_contacts_to_json(contact) {
                     eprintln!("Contact not saved: {:?}", e);
                 }

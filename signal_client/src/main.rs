@@ -35,8 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "contacts" => sync_and_print_contacts().await?,
         _ => {
             println!("Invalid option!\n");
-            print_options();
-        }
+            print_options(); }
     };
 
     Ok(())

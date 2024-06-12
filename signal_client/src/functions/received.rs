@@ -23,8 +23,7 @@ pub async fn show_messages(arguments: Vec<String>) -> Result<(), Box<dyn std::er
     let contact = &arguments[2];
     if let Some(uuid) = find_account_uuid(contact) {
         let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
-        let manager = Manager::load_registered(store.clone()).await?;
-
+        let mut manager = Manager::load_registered(store.clone()).await?;
         let thread = Thread::Contact(uuid);
         let messages = manager.messages(&thread, RangeFull)?;
 
@@ -35,6 +34,31 @@ pub async fn show_messages(arguments: Vec<String>) -> Result<(), Box<dyn std::er
                 eprintln!("Error processing message: {:?}", err);
             }
         }
+
+    } else {
+        println!("No contact found");
+
+    }
+
+    Ok(())
+}
+
+pub async fn show_last_message(contact: &String) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(uuid) = find_account_uuid(contact) {
+        let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+        let manager = Manager::load_registered(store.clone()).await?;
+        let thread = Thread::Contact(uuid);
+        let messages = manager.messages(&thread, RangeFull)?;
+        if let Some(last_message) = messages.last() {
+            if let Ok(msg) = last_message {
+                extract_message_info(&msg);
+            } else if let Err(err) = last_message {
+                eprintln!("Error processing message: {:?}", err);
+            }
+        } else {
+            println!("No messages found for the contact");
+        }
+
     } else {
         println!("No contact found");
     }
