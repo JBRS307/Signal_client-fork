@@ -61,7 +61,6 @@ pub async fn show_last_message(contact: &String, store: &SledStore) -> Result<()
                 eprintln!("Error processing message: {:?}", err);
             }
         }
-        println!("No DataMessage found for the contact");
 
     } else {
         println!("No message found");
