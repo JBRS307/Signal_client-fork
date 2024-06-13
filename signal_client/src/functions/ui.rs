@@ -160,8 +160,6 @@ async fn run_app<B: ratatui::backend::Backend>(
                                 ];
 
                                 arguments.push(input.clone());
-                                println!("{}", recipient);
-                                println!("{}", arguments[3]);
                                 if let Err(err) = send_message(arguments).await {
                                     eprintln!("Error sending message: {:?}", err);
                                 }

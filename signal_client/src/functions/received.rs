@@ -50,11 +50,10 @@ pub async fn show_last_message(contact: &String, store: &SledStore) -> Result<()
         let manager = Manager::load_registered(store.clone()).await?;
         let thread = Thread::Contact(uuid);
         let messages = manager.messages(&thread, RangeFull)?;
-                    extract_last_info(&msg, true);
 
         for message in messages.into_iter().rev() {
             if let Ok(msg) = message {
-                if let ContentBody::DataMessage(_) = msg.body {
+                if let ContentBody::DataMessage(..) = msg.body {
                     extract_last_info(&msg);
                     return Ok(());
                 }
@@ -65,7 +64,7 @@ pub async fn show_last_message(contact: &String, store: &SledStore) -> Result<()
         println!("No DataMessage found for the contact");
 
     } else {
-        println!("No contact found");
+        println!("No message found");
     }
 
     Ok(())
