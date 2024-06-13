@@ -41,7 +41,7 @@ Here are the available options:
     cargo run account my_account_name
     ```
 
-- To receive messages:
+- To receive messages and update message history:
 
     ```bash
     cargo run receive
