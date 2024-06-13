@@ -34,6 +34,8 @@ pub async fn link_account(arguments: Vec<String>) -> Result<(), Box<dyn Error>> 
         println!("  account <account_name>      - Link an account");
     }
 
+    close_previous_session().await?;
+
     let account_name = &arguments[2];
     let store = SledStore::open("./registration/main", MigrationConflictStrategy::Drop, OnNewIdentity::Trust)?;
     let (tx, rx) = oneshot::channel();
@@ -55,4 +57,24 @@ pub async fn link_account(arguments: Vec<String>) -> Result<(), Box<dyn Error>> 
         },
     ).await;
     Ok(())
+}
+
+async fn close_previous_session() -> Result<(), Box<dyn std::error::Error>>{
+    match async {
+        println!("otwieram sklep");
+        let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+        println!("manager");
+        let manager = Manager::load_registered(store).await?;
+        let registration_data = manager.registration_data();
+        println!("not yet");
+        let service_address = presage::libsignal_service::ServiceAddress::from(registration_data.service_ids.aci);
+        println!("????");
+        manager.clear_sessions(&service_address).await?;
+        println!("cleared");
+
+        Ok::<(), Box<dyn std::error::Error>>(())
+    }.await {
+        Ok(_) => Ok(()),
+        Err(_) => Ok(()),
+    }
 }
