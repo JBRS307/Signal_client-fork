@@ -1,7 +1,8 @@
 use presage::libsignal_service::content::Content;
 use presage::libsignal_service::content::ContentBody::DataMessage;
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use crate::functions::contacts::{find_name};
+use colored::Colorize;
+use crate::functions::contacts::{find_name, find_phone_number};
 
 pub fn extract_message_info(content: &Content, should_print: bool) -> Option<(String, &str, u64)> {
     if let Content {
@@ -21,6 +22,25 @@ pub fn extract_message_info(content: &Content, should_print: bool) -> Option<(St
         }
         return Some((sender_aci, message_body, message_timestamp));
     }
+    println!("Nie datamessage");
+    None
+}
+
+pub fn extract_last_info(content: &Content) -> Option<(String, &str, u64)> {
+    if let Content {
+        metadata,
+        body: DataMessage(sync_message),
+    } = content {
+        let sender_aci = metadata.sender.uuid.to_string();
+        let message_timestamp = sync_message.timestamp();
+        let message_body = sync_message.body();
+        if let Some(name) = find_name(sender_aci.as_str()){
+            println!("Last Message: {:?} \n", message_body);
+        } else{
+        }
+        return Some((sender_aci, message_body, message_timestamp));
+    }
+    println!("Nie datamessage");
     None
 }
 
