@@ -60,8 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "tui" => start_tui().await?,
         _ => {
             println!("Invalid option!\n");
-            print_options();
-        }
+            print_options(); }
     };
     Ok(())
 }
