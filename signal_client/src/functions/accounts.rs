@@ -6,6 +6,10 @@ use presage::manager::Manager;
 use presage::libsignal_service::configuration::SignalServers;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
 use std::error::Error;
+use std::fs;
+use std::path::Path;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 
 
 pub fn generate_qr_code(text: &str) {
@@ -34,6 +38,8 @@ pub async fn link_account(arguments: Vec<String>) -> Result<(), Box<dyn Error>> 
         println!("  account <account_name>      - Link an account");
     }
 
+    close_previous_session().await?;
+
     let account_name = &arguments[2];
     let store = SledStore::open("./registration/main", MigrationConflictStrategy::Drop, OnNewIdentity::Trust)?;
     let (tx, rx) = oneshot::channel();
@@ -55,4 +61,32 @@ pub async fn link_account(arguments: Vec<String>) -> Result<(), Box<dyn Error>> 
         },
     ).await;
     Ok(())
+}
+
+async fn close_previous_session() -> Result<(), Box<dyn std::error::Error>> {
+    match async {
+        let path = Path::new("./registration/main");
+        if path.exists() && path.is_dir() {
+            for entry in fs::read_dir(path)? {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_file() {
+                    fs::remove_file(&path)?;
+                } else if path.is_dir() {
+                    fs::remove_dir_all(&path)?;
+                }
+            }
+        }
+
+        let contacts_path = Path::new("./registration/contacts.json");
+        if contacts_path.exists() {
+            let mut file = File::create(contacts_path).await?;
+            file.write_all(b"{}").await?;
+        }
+
+        Ok::<(), Box<dyn std::error::Error>>(())
+    }.await {
+        Ok(_) => Ok(()),
+        Err(_) => Ok(()),
+    }
 }

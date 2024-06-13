@@ -2,7 +2,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use presage::libsignal_service::content::ContentBody;
 use presage::Manager;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
-use crate::functions::contacts::find_account_uuid;
+use crate::functions::contacts::{find_account_uuid, sync_and_get_contacts};
+
 
 pub async fn send_message(arguments: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
     if arguments.len() < 4{
@@ -39,4 +40,14 @@ pub async fn send_message(arguments: Vec<String>) -> Result<(), Box<dyn std::err
     }
 
     Ok(())
+}
+
+pub async fn initialize_app_data() -> Result<(Vec<String>, String), Box<dyn std::error::Error>> {
+    let contacts = sync_and_get_contacts().await?;
+    let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+    let manager = Manager::load_registered(store).await?;
+    let registration_data = manager.registration_data();
+    //let name = find_name(&registration_data.service_ids.aci.to_string()).unwrap_or_else(|| "Unknown".to_string());
+
+    Ok((contacts, registration_data.service_ids.aci.to_string()))
 }
