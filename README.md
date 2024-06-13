@@ -1,4 +1,5 @@
 # Signal Client
+![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
 
 Welcome to our Signal Client! This application allows you to send and receive messages, link accounts, sync contacts, and use a terminal-based user interface.
 
