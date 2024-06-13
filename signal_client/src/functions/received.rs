@@ -1,11 +1,12 @@
 use std::ops::RangeFull;
 use futures::StreamExt;
+use presage::libsignal_service::content::ContentBody;
 use presage::Manager;
 use presage::manager::ReceivingMode;
 use presage::store::Thread;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
 use crate::functions::contacts::{find_account_uuid};
-use crate::functions::messages::extract_message_info;
+use crate::functions::messages::{extract_last_info, extract_message_info};
 
 
 pub async fn receive_and_store_messages() -> Result<(), Box<dyn std::error::Error>> {
@@ -43,21 +44,24 @@ pub async fn show_messages(arguments: Vec<String>) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-pub async fn show_last_message(contact: &String) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn show_last_message(contact: &String, store: &SledStore) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(uuid) = find_account_uuid(contact) {
-        let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+        // let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
         let manager = Manager::load_registered(store.clone()).await?;
         let thread = Thread::Contact(uuid);
         let messages = manager.messages(&thread, RangeFull)?;
-        if let Some(last_message) = messages.last() {
-            if let Ok(msg) = last_message {
-                extract_message_info(&msg);
-            } else if let Err(err) = last_message {
+
+        for message in messages.into_iter().rev() {
+            if let Ok(msg) = message {
+                if let ContentBody::DataMessage(_) = msg.body {
+                    extract_last_info(&msg);
+                    return Ok(());
+                }
+            } else if let Err(err) = message {
                 eprintln!("Error processing message: {:?}", err);
             }
-        } else {
-            println!("No messages found for the contact");
         }
+        println!("No DataMessage found for the contact");
 
     } else {
         println!("No contact found");
@@ -65,3 +69,4 @@ pub async fn show_last_message(contact: &String) -> Result<(), Box<dyn std::erro
 
     Ok(())
 }
+
