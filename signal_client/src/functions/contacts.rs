@@ -1,4 +1,4 @@
-use presage::{Manager, store::{ContentsStore, StateStore}};
+use presage::{store::{ContentsStore}};
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
 use std::fs::File;
 use uuid::Uuid;
@@ -18,22 +18,6 @@ pub fn find_account_uuid(name: &str) -> Option<Uuid> {
         for account in accounts {
             if account["name"] == name {
                 return Uuid::parse_str(account["uuid"].as_str().unwrap()).ok();
-            }
-        }
-    }
-    None
-}
-
-pub fn find_phone_number(uuid: &str) -> Option<String> {
-    let mut file = File::open("./registration/contacts.json").expect("Unable to open file");
-    let mut data = String::new();
-    file.read_to_string(&mut data).expect("Unable to read file");
-
-    let json: Value = serde_json::from_str(&data).expect("Unable to parse JSON");
-    if let Some(accounts) = json["accounts"].as_array() {
-        for account in accounts {
-            if account["uuid"] == uuid {
-                return account["number"].as_str().map(|s| s.to_string());
             }
         }
     }

@@ -1,7 +1,7 @@
 use presage::libsignal_service::content::Content;
 use presage::libsignal_service::content::ContentBody::DataMessage;
-use chrono::{DateTime, NaiveDateTime, Utc};
-use crate::functions::contacts::{find_name, find_phone_number};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use crate::functions::contacts::{find_name};
 
 pub fn extract_message_info(content: &Content, should_print: bool) -> Option<(String, &str, u64)> {
     if let Content {
@@ -12,7 +12,7 @@ pub fn extract_message_info(content: &Content, should_print: bool) -> Option<(St
         let message_timestamp = sync_message.timestamp();
         let message_body = sync_message.body();
         let message_date = format_timestamp(message_timestamp);
-        if (should_print){
+        if should_print{
             if let Some(name) = find_name(sender_aci.as_str()){
                 println!("Sender: {:?} \nMessage: {:?} \nTime: {:?} \n", name , message_body, message_date);
             } else{
@@ -28,5 +28,6 @@ pub fn format_timestamp(timestamp: u64) -> String {
     let timestamp = timestamp / 1000;
     let naive = NaiveDateTime::from_timestamp_opt(timestamp as i64, 0).expect("Invalid timestamp");
     let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
-    datetime.format("%d.%m.%Y %H:%M:%S").to_string()
+    let temp = datetime + Duration::hours(2);
+    temp.format("%d.%m.%Y %H:%M:%S").to_string()
 }

@@ -5,10 +5,8 @@ mod functions;
 use std::env;
 use crate::functions::accounts::link_account;
 use crate::functions::contacts::sync_and_print_contacts;
-use crate::functions::received::{receive_and_store_messages, show_messages, get_contact_messages};
-use crate::functions::sending::{send_message, initialize_app_data};
-use crate::functions::contacts::{sync_and_get_contacts, find_name};
-use crate::functions::messages::format_timestamp;
+use crate::functions::received::{receive_and_store_messages, show_messages};
+use crate::functions::sending::{send_message};
 use crate::functions::ui::start_tui;
 
 fn print_options() {
@@ -24,7 +22,6 @@ fn print_options() {
 pub struct App {
     contacts: Vec<String>,
     messages: Vec<(String, String, u64, String)>,
-    input: String,
     selected_contact: Option<usize>,
     name: String,
 }
@@ -34,7 +31,6 @@ impl App {
         App {
             contacts,
             messages: vec![],
-            input: String::new(),
             selected_contact: None,
             name,
         }

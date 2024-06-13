@@ -1,10 +1,8 @@
 use std::ops::RangeFull;
 use futures::StreamExt;
 use presage::Manager;
-use uuid::Uuid;
-use crate::App;
 use presage::manager::ReceivingMode;
-use presage::store::{Thread, ContentsStore, Store};
+use presage::store::{Thread};
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
 use crate::functions::contacts::{find_account_uuid};
 use crate::functions::messages::extract_message_info;
@@ -25,7 +23,7 @@ pub async fn show_messages(arguments: Vec<String>) -> Result<(), Box<dyn std::er
     let contact = &arguments[2];
     if let Some(uuid) = find_account_uuid(contact) {
         let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
-        let mut manager = Manager::load_registered(store.clone()).await?;
+        let manager = Manager::load_registered(store.clone()).await?;
         let thread = Thread::Contact(uuid);
         let messages = manager.messages(&thread, RangeFull)?;
 

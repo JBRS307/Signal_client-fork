@@ -8,24 +8,13 @@ use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use std::io;
 use std::time::Duration;
-use tokio::sync::mpsc;
 
-use crate::functions::contacts::sync_and_print_contacts;
-use crate::functions::received::{receive_and_store_messages, show_messages, get_contact_messages};
+use crate::functions::received::{get_contact_messages};
 use crate::functions::sending::{send_message, initialize_app_data};
-use crate::functions::contacts::{sync_and_get_contacts, find_name};
 use crate::functions::messages::format_timestamp;
 use crate::App;
 
 
-use presage::libsignal_service::ServiceAddress;
-use crate::functions::messages::extract_message_info;
-use futures::StreamExt;
-use presage::manager::ReceivingMode;
-use std::ops::RangeFull;
-use presage::Manager;
-use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
-use chrono::NaiveDateTime;
 
 #[derive(PartialEq)]
 enum InputMode {

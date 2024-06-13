@@ -2,8 +2,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use presage::libsignal_service::content::ContentBody;
 use presage::Manager;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
-use crate::functions::contacts::{find_account_uuid, sync_and_get_contacts, find_name};
-use presage::proto::DataMessage;
+use crate::functions::contacts::{find_account_uuid, sync_and_get_contacts};
 
 
 pub async fn send_message(arguments: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
