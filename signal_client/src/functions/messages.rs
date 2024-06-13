@@ -3,7 +3,7 @@ use presage::libsignal_service::content::ContentBody::DataMessage;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use crate::functions::contacts::{find_name, find_phone_number};
 
-pub fn extract_message_info(content: &Content) -> Option<(String, &str, u64)> {
+pub fn extract_message_info(content: &Content, should_print: bool) -> Option<(String, &str, u64)> {
     if let Content {
         metadata,
         body: DataMessage(sync_message),
@@ -12,11 +12,13 @@ pub fn extract_message_info(content: &Content) -> Option<(String, &str, u64)> {
         let message_timestamp = sync_message.timestamp();
         let message_body = sync_message.body();
         let message_date = format_timestamp(message_timestamp);
-        // if let Some(name) = find_name(sender_aci.as_str()){
-        //     println!("Sender: {:?} \nMessage: {:?} \nTime: {:?} \n", name , message_body, message_date);
-        // } else{
-        //     println!("Sender: {:?} \nMessage: {:?} \nTime: {:?} \n", sender_aci , message_body, message_date);
-        // }
+        if (should_print){
+            if let Some(name) = find_name(sender_aci.as_str()){
+                println!("Sender: {:?} \nMessage: {:?} \nTime: {:?} \n", name , message_body, message_date);
+            } else{
+                println!("Sender: {:?} \nMessage: {:?} \nTime: {:?} \n", sender_aci , message_body, message_date);
+            }
+        }
         return Some((sender_aci, message_body, message_timestamp));
     }
     None

@@ -217,3 +217,43 @@ async fn get_contact_messages_with_dates(contact: &str) -> Result<Vec<(String, S
     }).collect();
     Ok(messages_with_dates)
 }
+
+//Moja propozycja
+/*
+pub async fn receive_and_store_messages_2() -> Result<(), Box<dyn std::error::Error>>  {
+    let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+    let mut manager = Manager::load_registered(store.clone()).await?;
+    let mut messages = Box::pin(manager.receive_messages(ReceivingMode::Forever).await?);
+
+    while let Some(message) = messages.next().await {
+        if let Some(selected) = app.selected_contact {
+            match get_contact_messages_with_dates(&app.contacts[selected]).await {
+                Ok(messages) => app.messages = messages,
+                Err(err) => eprintln!("Error fetching messages: {:?}", err),
+            }
+        }
+    }
+    Ok(())
+}
+*/
+
+//propozycja czata
+/*
+// Function to receive and store messages using a sender
+async fn receive_and_store_messages_with_sender(tx: mpsc::Sender<()>) {
+    loop {
+        // Simulate receiving messages
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        println!("Received a new message!");
+
+        // Send a notification to the channel
+        if let Err(e) = tx.send(()).await {
+            eprintln!("Failed to send message: {}", e);
+        }
+
+        // Access and modify the global app state
+        let mut app = APP.lock().await;
+        app.messages.push(("sender".to_string(), "New message".to_string(), 0, "timestamp".to_string()));
+    }
+}
+*/

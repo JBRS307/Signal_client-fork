@@ -15,7 +15,7 @@ pub async fn receive_and_store_messages() -> Result<(), Box<dyn std::error::Erro
     let mut manager = Manager::load_registered(store.clone()).await?;
     let mut messages = Box::pin(manager.receive_messages(ReceivingMode::Forever).await?);
     while let Some(message) = messages.next().await {
-        extract_message_info(&message);
+        extract_message_info(&message, true);
     }
     Ok(())
 }
@@ -32,7 +32,7 @@ pub async fn show_messages(arguments: Vec<String>) -> Result<(), Box<dyn std::er
 
         for message in messages {
             if let Ok(msg) = message {
-                extract_message_info(&msg);
+                extract_message_info(&msg, true);
             } else if let Err(err) = message {
                 eprintln!("Error processing message: {:?}", err);
             }
@@ -56,7 +56,7 @@ pub async fn get_contact_messages(contact: &str) -> Result<Vec<(String, String, 
 
         for message in manager_messages {
             if let Ok(msg) = message {
-                if let Some(info) = extract_message_info(&msg) {
+                if let Some(info) = extract_message_info(&msg, false) {
                     let (sender, body, timestamp) = info;
                     let body_string = body.to_string();
                     let modified_info = (sender, body_string, timestamp); 
