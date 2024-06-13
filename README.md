@@ -62,16 +62,6 @@ Here are the available options:
     ```bash
     cargo run tui
     ```
-
-## Project Structure
-
-The project is structured into modules to organize different functionalities:
-
-- `functions/accounts.rs` - Contains functions to link accounts.
-- `functions/contacts.rs` - Contains functions to sync and print contacts.
-- `functions/received.rs` - Contains functions to receive and show messages.
-- `functions/sending.rs` - Contains functions to send messages.
-- `functions/ui.rs` - Contains functions to start the terminal user interface.
   
 ## License
 
