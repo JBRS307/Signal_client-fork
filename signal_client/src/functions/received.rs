@@ -53,7 +53,7 @@ pub async fn show_last_message(contact: &String) -> Result<(), Box<dyn std::erro
         let messages = manager.messages(&thread, RangeFull)?;
         if let Some(last_message) = messages.last() {
             if let Ok(msg) = last_message {
-                extract_message_info(&msg);
+                extract_message_info(&msg, true);
             } else if let Err(err) = last_message {
                 eprintln!("Error processing message: {:?}", err);
             }
