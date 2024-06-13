@@ -9,7 +9,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScree
 use std::io;
 use std::time::Duration;
 
-use crate::functions::received::{get_contact_messages};
+use crate::functions::received::{get_contact_messages, receive_and_store_messages};
 use crate::functions::sending::{send_message, initialize_app_data};
 use crate::functions::messages::format_timestamp;
 use crate::App;
@@ -163,9 +163,8 @@ async fn run_app<B: ratatui::backend::Backend>(
                                 if let Err(err) = send_message(arguments).await {
                                     eprintln!("Error sending message: {:?}", err);
                                 }
-                                println!("test1");
+                                receive_and_store_messages().await?;
                                 input.clear();
-                                println!("test2");
                                 app.messages = get_contact_messages_with_dates(&app.contacts[selected]).await?;
                             }
                             input_mode = InputMode::Normal;

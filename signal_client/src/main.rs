@@ -37,7 +37,7 @@ impl App {
     }
 }
 
-#[tokio::main(flavor = "multi_thread")]
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
@@ -49,7 +49,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let option = &args[1];
     match option.as_str() {
-        "send" => send_message(args).await?,
+        "send" =>   {
+            send_message(args).await?;
+            receive_and_store_messages().await?
+        }
         "account" => link_account(args).await?,
         "receive" => receive_and_store_messages().await?,
         "show" => show_messages(args).await?,
