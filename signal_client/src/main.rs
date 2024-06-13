@@ -13,9 +13,10 @@ use crate::functions::ui::start_tui;
 
 fn print_options() {
     println!("Please use one of the following options:");
-    println!("  send <recipient> <message>   - Send a message to a recipient");
+    println!("  send <recipient> <message>  - Send a message to a recipient");
     println!("  account <account_name>      - Link an account");
     println!("  receive                     - Receive and store messages");
+    println!("  contacts                    - Show all contacts");
     println!("  show <contact>              - Show messages for a contact");
     println!("  tui                         - Start the terminal UI");
 }
