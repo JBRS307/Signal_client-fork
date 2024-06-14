@@ -12,7 +12,7 @@ use crate::functions::messages::{extract_last_info, extract_message_info};
 pub async fn receive_and_store_messages() -> Result<(), Box<dyn std::error::Error>> {
     let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
     let mut manager = Manager::load_registered(store.clone()).await?;
-    let mut messages = Box::pin(manager.receive_messages(ReceivingMode::Forever).await?);
+    let mut messages = Box::pin(manager.receive_messages(ReceivingMode::InitialSync).await?);
     while let Some(message) = messages.next().await {
         extract_message_info(&message, true);
     }

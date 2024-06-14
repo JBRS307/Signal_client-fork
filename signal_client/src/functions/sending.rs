@@ -1,8 +1,10 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use presage::libsignal_service::content::ContentBody;
 use presage::Manager;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
+use log::{error, info};
 use crate::functions::contacts::{find_account_uuid, sync_and_get_contacts};
+use crate::functions::received::receive_and_store_messages;
 
 
 pub async fn send_message(arguments: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
@@ -38,6 +40,8 @@ pub async fn send_message(arguments: Vec<String>) -> Result<(), Box<dyn std::err
     } else {
         eprintln!("No such contact");
     }
+
+    // receive_and_store_messages().await?;
 
     Ok(())
 }
