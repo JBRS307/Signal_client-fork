@@ -65,9 +65,6 @@ Here are the available options:
     ```bash
     cargo run tui
     ```
-  
-## License
 
-This project is licensed under the MIT License.
 
 ---
