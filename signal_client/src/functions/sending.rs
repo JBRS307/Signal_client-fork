@@ -20,7 +20,7 @@ pub async fn send_message(arguments: Vec<String>) -> Result<(), Box<dyn std::err
     let timestamp = since_the_epoch.as_millis() as u64;
 
     if let Some(uuid) = find_account_uuid(recipient) {
-        let service_address = presage::libsignal_service::ServiceAddress::from(uuid);
+        let service_address = presage::libsignal_service::ServiceAddress::new_aci(uuid);
 
         let data_message = presage::proto::DataMessage {
             body: Some(message.parse().unwrap()), timestamp: Some(timestamp),

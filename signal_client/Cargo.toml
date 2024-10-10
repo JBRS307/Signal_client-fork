@@ -7,7 +7,6 @@ edition = "2021"
 base64 = "0.13"
 presage = { git = "https://github.com/whisperfish/presage" }
 presage-store-sled = { git = "https://github.com/whisperfish/presage" }
-curve25519-dalek = { git = 'https://github.com/dalek-cryptography/curve25519-dalek', branch = 'main' }
 tokio = { version = "1.38.0", features = ["full", "rt-multi-thread"] }
 uuid = { version = "1.8.0", features = ["v4"] }
 serde_json = "1.0"
@@ -21,5 +20,5 @@ colored = "2.0"
 
 
 [patch.crates-io]
-curve25519-dalek = { git = 'https://github.com/signalapp/curve25519-dalek', tag = 'signal-curve25519-4.1.1' }
+curve25519-dalek = { git = 'https://github.com/signalapp/curve25519-dalek', tag = 'signal-curve25519-4.1.3' }
 
