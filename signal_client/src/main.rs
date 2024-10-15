@@ -8,6 +8,7 @@ use crate::functions::contacts::sync_and_print_contacts;
 use crate::functions::received::{receive_and_store_messages, show_messages};
 use crate::functions::sending::{send_message};
 use crate::functions::ui::start_tui;
+use crate::functions::group::sync_and_print_groups;
 
 fn print_options() {
     println!("Please use one of the following options:");
@@ -57,6 +58,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "receive" => receive_and_store_messages().await?,
         "show" => show_messages(args).await?,
         "contacts" => sync_and_print_contacts().await?,
+        "groups" => sync_and_print_groups().await?,
         "tui" => start_tui().await?,
         _ => {
             println!("Invalid option!\n");

@@ -90,6 +90,7 @@ fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Erro
 
 pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>> {
     let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+
     let contacts_iter = store.contacts()?;
     for contact_result in contacts_iter {
         match contact_result {
