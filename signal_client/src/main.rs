@@ -3,7 +3,7 @@ extern crate qrcodegen;
 
 mod functions;
 use std::env;
-use crate::functions::accounts::link_account;
+use crate::functions::accounts::{link_account, print_current_user};
 use crate::functions::contacts::sync_and_print_contacts;
 use crate::functions::received::{receive_and_store_messages, show_messages};
 use crate::functions::sending::{send_message};
@@ -13,6 +13,7 @@ use crate::functions::group::sync_and_print_groups;
 fn print_options() {
     println!("Please use one of the following options:");
     println!("  send <recipient> <message>  - Send a message to a recipient");
+    println!("  info                        - Show info about currently registered user");
     println!("  account <account_name>      - Link an account");
     println!("  receive                     - Receive and store messages");
     println!("  contacts                    - Show all contacts");
@@ -55,6 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             receive_and_store_messages().await?
         }
         "account" => link_account(args).await?,
+        "info" => print_current_user().await?,
         "receive" => receive_and_store_messages().await?,
         "show" => show_messages(args).await?,
         "contacts" => sync_and_print_contacts().await?,

@@ -11,6 +11,8 @@ use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
+use super::paths;
+
 
 pub fn generate_qr_code(text: &str) {
     let qr = QrCode::encode_text(text, QrCodeEcc::Medium).unwrap();
@@ -89,4 +91,29 @@ async fn close_previous_session() -> Result<(), Box<dyn std::error::Error>> {
         Ok(_) => Ok(()),
         Err(_) => Ok(()),
     }
+}
+
+pub async fn print_current_user() -> Result<(), Box<dyn std::error::Error>> {
+    let store = SledStore::open(paths::DATABASE, MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+    let mut manager = Manager::load_registered(store.clone()).await?;
+    
+    let profile = manager.retrieve_profile().await?;
+
+    print!("Name: ");
+    if let Some(name) = profile.name {
+        print!("{} ", name.given_name);
+        if let Some(lastname) = name.family_name {
+            print!("{}", lastname);
+        }
+    }
+    println!("");
+
+    print!("About: ");
+    if let Some(about) = profile.about {
+        print!("{}", about);
+    }
+    println!("");
+
+    Ok(())
+
 }
