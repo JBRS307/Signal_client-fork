@@ -1,10 +1,11 @@
-use std::{fs::{File, OpenOptions}, io::{Read, Write}};
+use std::{fs::{self, File, OpenOptions}, io::{Read, Write}};
 
 use super::paths;
 
-use presage::{libsignal_service::zkgroup::GroupMasterKeyBytes, store::ContentsStore};
-use presage_store_sled::{OnNewIdentity, MigrationConflictStrategy, SledStore};
+use presage::libsignal_service::zkgroup::GroupMasterKeyBytes;
 use presage::libsignal_service::groups_v2::Group;
+use presage::store::ContentsStore;
+use presage_store_sled::{OnNewIdentity, MigrationConflictStrategy, SledStore};
 use colored::Colorize;
 use serde_json::{json, Value};
 
@@ -19,11 +20,9 @@ fn group_exists(json: &Value, key: &GroupMasterKeyBytes) -> bool {
     false
 }
 
-fn add_group_to_json(key: &GroupMasterKeyBytes, group: &Group) -> Result<(), Box<dyn std::error::Error>> {
-    let mut data = String::new();
+pub fn add_group_to_json(key: &GroupMasterKeyBytes, group: &Group) -> Result<(), Box<dyn std::error::Error>> {
     let mut json: Value;
-    if let Ok(mut fp) = File::open(paths::GROUPS) {
-        fp.read_to_string(&mut data)?;
+    if let Ok(data) = fs::read_to_string(paths::GROUPS) {
         json = if data.trim().is_empty() {
             json!({"groups": [], "version": 2})
         } else {
@@ -48,8 +47,7 @@ fn add_group_to_json(key: &GroupMasterKeyBytes, group: &Group) -> Result<(), Box
     }
 
     let updated_data = serde_json::to_string_pretty(&json)?;
-    let mut fp = OpenOptions::new().write(true).create(true).truncate(true).open(paths::GROUPS)?;
-    fp.write_all(updated_data.as_bytes())?;
+    fs::write(paths::GROUPS, updated_data)?;
     Ok(())
 }
 
