@@ -3,6 +3,8 @@ extern crate qrcodegen;
 
 mod functions;
 use std::env;
+use std::io::{stdout, Write};
+
 use crate::functions::accounts::{ link_account};
 use crate::functions::contacts::sync_and_print_contacts;
 use crate::functions::received::{receive_and_store_messages, show_messages};
@@ -11,9 +13,10 @@ use crate::functions::sending::send_message;
 fn print_options(){
     println!("Please use one of the following options:");
     println!("  send <recipient> <message>   - Send a message to a recipient");
-    println!("  account <account_name>      - Link an account");
-    println!("  receive                     - Receive and store messages");
-    println!("  show <contact>              - Show messages for a contact");
+    println!("  account <account_name>       - Link an account");
+    println!("  receive                      - Receive and store messages");
+    println!("  show <contact>               - Show messages for a contact");
+    println!("  contacts                     - Show all contacts with last message");
 }
 
 #[tokio::main(flavor = "multi_thread")]

@@ -7,12 +7,13 @@ use presage::store::Thread;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
 use crate::functions::contacts::{find_account_uuid};
 use crate::functions::messages::{extract_last_info, extract_message_info};
+use std::pin::pin;
 
 
 pub async fn receive_and_store_messages() -> Result<(), Box<dyn std::error::Error>> {
     let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
     let mut manager = Manager::load_registered(store.clone()).await?;
-    let mut messages = Box::pin(manager.receive_messages(ReceivingMode::InitialSync).await?);
+    let mut messages = pin!(manager.receive_messages(ReceivingMode::InitialSync).await?);
     while let Some(message) = messages.next().await {
         extract_message_info(&message);
     }
