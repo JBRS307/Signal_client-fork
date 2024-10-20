@@ -1,4 +1,4 @@
-use presage::{Manager, store::{ContentsStore, StateStore}};
+use presage::{manager::Registered, proto::data_message::contact, store::{ContentsStore, StateStore}, Manager};
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
 use std::fs::File;
 use uuid::Uuid;
@@ -8,6 +8,7 @@ use std::fs::OpenOptions;
 use colored::Colorize;
 use presage::libsignal_service::models::Contact;
 use crate::functions::received::show_last_message;
+use crate::functions::accounts::load_registered_user;
 
 pub fn find_account_uuid(name: &str) -> Option<Uuid> {
     let mut file = File::open("./registration/contacts.json").expect("Unable to open file");
@@ -104,14 +105,20 @@ fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
-pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>> {
-    let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
-    let contacts_iter = store.contacts()?;
+// Wrapper function to sync contacts
+pub async fn sync_contacts(manager: &mut Manager<SledStore, Registered>) -> Result<(), Box<dyn std::error::Error>> {
+    manager.sync_contacts().await?;
+    Ok(())
+}
+
+// Function to print contacts with last messages using manager
+pub fn print_contacts(manager: &Manager<SledStore, Registered>) -> Result<(), Box<dyn std::error::Error>> {
+    let contacts_iter = manager.store().contacts()?;
     for contact_result in contacts_iter {
         match contact_result {
             Ok(contact) => {
                 println!("{}", contact.name.blue() );
-                show_last_message(&contact.name, &store).await?;
+                show_last_message(&contact.name, manager)?;
                 println!("-------------------");
                 if let Err(e) = add_contacts_to_json(contact) {
                     eprintln!("Contact not saved: {:?}", e);
@@ -120,6 +127,13 @@ pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>>
             Err(err) => eprintln!("Error retrieving contact: {:?}", err),
         }
     }
+    Ok(())
+}
 
+// Function to sync and print contacts for compatibility with current ui
+pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>> {
+    let mut manager = load_registered_user().await?;
+    sync_contacts(&mut manager).await?;
+    print_contacts(&manager)?;
     Ok(())
 }

@@ -3,3 +3,4 @@ pub mod contacts;
 pub mod sending;
 pub mod received;
 mod messages;
+mod paths;

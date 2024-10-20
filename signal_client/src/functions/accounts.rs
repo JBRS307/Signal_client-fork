@@ -1,3 +1,4 @@
+use presage::manager::Registered;
 use qrcodegen::QrCode;
 use qrcodegen::QrCodeEcc;
 use futures::channel::oneshot;
@@ -6,6 +7,8 @@ use presage::manager::Manager;
 use presage::libsignal_service::configuration::SignalServers;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
 use std::error::Error;
+
+use super::paths;
 
 
 pub fn generate_qr_code(text: &str) {
@@ -55,4 +58,10 @@ pub async fn link_account(arguments: Vec<String>) -> Result<(), Box<dyn Error>> 
         },
     ).await;
     Ok(())
+}
+
+// Wrapper function to load registered user into a manager
+pub async fn load_registered_user() -> Result<Manager<SledStore, Registered>, Box<dyn std::error::Error>> {
+    let store = SledStore::open(paths::DATABASE, MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
+    Ok(Manager::load_registered(store).await?)
 }

@@ -2,7 +2,7 @@ use std::ops::RangeFull;
 use futures::StreamExt;
 use presage::libsignal_service::content::ContentBody;
 use presage::Manager;
-use presage::manager::ReceivingMode;
+use presage::manager::{ReceivingMode, Registered};
 use presage::store::Thread;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
 use crate::functions::contacts::{find_account_uuid};
@@ -44,10 +44,11 @@ pub async fn show_messages(arguments: Vec<String>) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-pub async fn show_last_message(contact: &String, store: &SledStore) -> Result<(), Box<dyn std::error::Error>> {
+// Function to show most recent message for given contact
+pub fn show_last_message(contact: &String, manager: &Manager<SledStore, Registered>) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(uuid) = find_account_uuid(contact) {
         // let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
-        let manager = Manager::load_registered(store.clone()).await?;
+        // let manager = Manager::load_registered(store.clone()).await?;
         let thread = Thread::Contact(uuid);
         let messages = manager.messages(&thread, RangeFull)?;
 

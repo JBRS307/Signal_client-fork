@@ -1,0 +1,1 @@
+pub const DATABASE: &str = "./registration/main";
