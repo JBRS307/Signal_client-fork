@@ -101,12 +101,12 @@ fn add_contacts_to_json(contact: &Contact) -> Result<(), Box<dyn std::error::Err
 
 // Wrapper function to sync contacts
 pub async fn sync_contacts(manager: &mut Manager<SledStore, Registered>) -> Result<(), Box<dyn std::error::Error>> {
-    manager.request_contacts().await?;
+    manager.sync_contacts().await?;
     Ok(())
 }
 
 // Function to print contacts with last messages using manager
-pub fn print_contacts(manager: &Manager<SledStore, Registered>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn print_contacts(manager: &Manager<SledStore, Registered>) -> Result<(), Box<dyn std::error::Error>> {
     let contacts_iter = manager.store().contacts()?;
     for contact_result in contacts_iter {
         match contact_result {
@@ -115,7 +115,7 @@ pub fn print_contacts(manager: &Manager<SledStore, Registered>) -> Result<(), Bo
                     eprintln!("Contact not saved: {:?}", e);
                 }
                 println!("{}", contact.name.blue() );
-                show_last_message(&contact.name, manager)?;
+                show_last_message(&contact.name, &manager)?;
                 println!("-------------------");
             },
             Err(err) => eprintln!("Error retrieving contact: {:?}", err),
@@ -128,6 +128,6 @@ pub fn print_contacts(manager: &Manager<SledStore, Registered>) -> Result<(), Bo
 pub async fn sync_and_print_contacts() -> Result<(), Box<dyn std::error::Error>> {
     let mut manager = load_registered_user().await?;
     sync_contacts(&mut manager).await?;
-    print_contacts(&manager)?;
+    print_contacts(&manager).await?;
     Ok(())
 }

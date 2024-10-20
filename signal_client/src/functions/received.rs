@@ -5,6 +5,8 @@ use presage::Manager;
 use presage::manager::{ReceivingMode, Registered};
 use presage::store::Thread;
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
+use presage::store::ContentsStore;
+use uuid::Uuid;
 use crate::functions::contacts::{find_account_uuid};
 use crate::functions::messages::{extract_last_info, extract_message_info};
 use std::pin::pin;
@@ -51,13 +53,13 @@ pub fn show_last_message(contact: &String, manager: &Manager<SledStore, Register
         // let store = SledStore::open("./registration/main", MigrationConflictStrategy::BackupAndDrop, OnNewIdentity::Trust)?;
         // let manager = Manager::load_registered(store.clone()).await?;
         let thread = Thread::Contact(uuid);
-        let messages = manager.messages(&thread, RangeFull)?;
+        let messages = manager.store().messages(&thread, RangeFull)?;
 
         for message in messages.into_iter().rev() {
             if let Ok(msg) = message {
-                if let ContentBody::DataMessage(_) = msg.body {
-                    extract_last_info(&msg);
-                    return Ok(());
+                if let Some((_, body, _)) = extract_message_info(&msg) {
+                    // println!("Last message from {}: {}", contact, body);
+                    return Ok(())
                 }
             } else if let Err(err) = message {
                 eprintln!("Error processing message: {:?}", err);
