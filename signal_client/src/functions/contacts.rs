@@ -9,6 +9,7 @@ use colored::Colorize;
 use presage::libsignal_service::models::Contact;
 use crate::functions::received::show_last_message;
 use crate::functions::accounts::load_registered_user;
+use std::pin::pin;
 
 use super::paths;
 
@@ -65,7 +66,7 @@ fn contact_exists(json: &Value, uuid: &str) -> bool {
     false
 }
 
-fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Error>> {
+fn add_contacts_to_json(contact: &Contact) -> Result<(), Box<dyn std::error::Error>> {
     let mut json: Value;
 
     // Read existing content or initialize new JSON
@@ -100,7 +101,7 @@ fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Erro
 
 // Wrapper function to sync contacts
 pub async fn sync_contacts(manager: &mut Manager<SledStore, Registered>) -> Result<(), Box<dyn std::error::Error>> {
-    manager.sync_contacts().await?;
+    manager.request_contacts().await?;
     Ok(())
 }
 
@@ -110,12 +111,12 @@ pub fn print_contacts(manager: &Manager<SledStore, Registered>) -> Result<(), Bo
     for contact_result in contacts_iter {
         match contact_result {
             Ok(contact) => {
+                if let Err(e) = add_contacts_to_json(&contact) {
+                    eprintln!("Contact not saved: {:?}", e);
+                }
                 println!("{}", contact.name.blue() );
                 show_last_message(&contact.name, manager)?;
                 println!("-------------------");
-                if let Err(e) = add_contacts_to_json(contact) {
-                    eprintln!("Contact not saved: {:?}", e);
-                }
             },
             Err(err) => eprintln!("Error retrieving contact: {:?}", err),
         }
