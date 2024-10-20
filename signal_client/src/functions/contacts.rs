@@ -1,6 +1,6 @@
 use presage::{manager::Registered, proto::data_message::contact, store::{ContentsStore, StateStore}, Manager};
 use presage_store_sled::{MigrationConflictStrategy, OnNewIdentity, SledStore};
-use std::fs::File;
+use std::fs::{self, File};
 use uuid::Uuid;
 use std::io::{Read, Write};
 use serde_json::{json, Value};
@@ -10,10 +10,10 @@ use presage::libsignal_service::models::Contact;
 use crate::functions::received::show_last_message;
 use crate::functions::accounts::load_registered_user;
 
+use super::paths;
+
 pub fn find_account_uuid(name: &str) -> Option<Uuid> {
-    let mut file = File::open("./registration/contacts.json").expect("Unable to open file");
-    let mut data = String::new();
-    file.read_to_string(&mut data).expect("Unable to read file");
+    let data = fs::read_to_string(paths::CONTACTS).expect("Unable to open file!");
 
     let json: Value = serde_json::from_str(&data).expect("Unable to parse JSON");
     if let Some(accounts) = json["accounts"].as_array() {
@@ -27,9 +27,7 @@ pub fn find_account_uuid(name: &str) -> Option<Uuid> {
 }
 
 pub fn find_phone_number(uuid: &str) -> Option<String> {
-    let mut file = File::open("./registration/contacts.json").expect("Unable to open file");
-    let mut data = String::new();
-    file.read_to_string(&mut data).expect("Unable to read file");
+    let data = fs::read_to_string(paths::CONTACTS).expect("Unable to open file!");
 
     let json: Value = serde_json::from_str(&data).expect("Unable to parse JSON");
     if let Some(accounts) = json["accounts"].as_array() {
@@ -43,9 +41,7 @@ pub fn find_phone_number(uuid: &str) -> Option<String> {
 }
 
 pub fn find_name(uuid: &str) -> Option<String> {
-    let mut file = File::open("./registration/contacts.json").expect("Unable to open file");
-    let mut data = String::new();
-    file.read_to_string(&mut data).expect("Unable to read file");
+    let data = fs::read_to_string(paths::CONTACTS).expect("Unable to open file!");
 
     let json: Value = serde_json::from_str(&data).expect("Unable to parse JSON");
     if let Some(accounts) = json["accounts"].as_array() {
@@ -70,12 +66,10 @@ fn contact_exists(json: &Value, uuid: &str) -> bool {
 }
 
 fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Error>> {
-    let mut data = String::new();
     let mut json: Value;
 
     // Read existing content or initialize new JSON
-    if let Ok(mut file) = File::open("./registration/contacts.json") {
-        file.read_to_string(&mut data)?;
+    if let Ok(data) = fs::read_to_string(paths::CONTACTS) {
         json = if data.trim().is_empty() {
             json!({"accounts": [], "version": 2})
         } else {
@@ -100,8 +94,7 @@ fn add_contacts_to_json(contact: Contact) -> Result<(), Box<dyn std::error::Erro
     }
 
     let updated_data = serde_json::to_string_pretty(&json)?;
-    let mut file = OpenOptions::new().write(true).truncate(true).create(true).open("./registration/contacts.json")?;
-    file.write_all(updated_data.as_bytes())?;
+    fs::write(paths::CONTACTS, updated_data)?;
     Ok(())
 }
 
